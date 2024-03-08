@@ -16,11 +16,8 @@ import timber.log.Timber;
 public class USSDServiceKT extends AccessibilityService {
     private static AccessibilityEvent event;
 
-    /**
-     * Catch widget by Accessibility, when is showing at mobile display
-     *
-     * @param event AccessibilityEvent
-     */
+    // Catch widget by Accessibility, when is showing at mobile display
+
     @Override
     public void onAccessibilityEvent(AccessibilityEvent event) {
         USSDServiceKT.event = event;
@@ -34,10 +31,9 @@ public class USSDServiceKT extends AccessibilityService {
         }
         String response = event.getText().toString();
         if (LoginView(event) && notInputText(event)) {
-            // first view or logView, do nothing, pass / FIRST MESSAGE
+            // first view or logView, do nothing, pass / FIRST MESSAGE & move forward
             clickOnButton(event, 0);
-            ussd.stopRunning();
-            ussd.callBack.over(response);
+            ussd.callBack.response(response);
         } else if (problemView(event) || LoginView(event)) {
             // deal down
             clickOnButton(event, 1);
@@ -61,20 +57,14 @@ public class USSDServiceKT extends AccessibilityService {
 
     }
 
-    /**
-     * Send whatever you want via USSD
-     *
-     * @param text any string
-     */
+    // Send whatever you want via USSD
     public static void send(String text) {
         Timber.d("trying to send... %s", text);
         setTextIntoField(event, text);
         clickOnButton(event, 1);
     }
 
-    /**
-     * Dismiss dialog by using first button from USSD Dialog
-     */
+    /// Dismiss dialog by using first button from USSD Dialog
     public static void cancel() {
         clickOnButton(event, 0);
         Timber.d("Trying to close/cancel USSD process by clicked in first button ");

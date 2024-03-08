@@ -1,7 +1,6 @@
 package `in`.hypernation.payup.data.USSD
 
 import android.content.Context
-import hypernation.payup.data.USSD.USSDBuilder
 
 interface USSDApi {
     fun send(text : String, callBackMessage:(String) -> Unit)

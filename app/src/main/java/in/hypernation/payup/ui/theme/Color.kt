@@ -12,5 +12,7 @@ val PurpleGrey40 = Color(0xFF625b71)
 val Pink40 = Color(0xFF7D5260)
 val Green = Color(0xFF39B97B)
 val GhostBlack = Color(0xFF1E1E1E)
+val GhostBlack60 = Color(0x991E1E1E)
+val Black70 = Color(0xB9000000)
 
 val GhostWhite = Color(0xFFFAFAFA)

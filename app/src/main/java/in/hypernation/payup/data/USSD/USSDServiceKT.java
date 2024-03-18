@@ -30,16 +30,34 @@ public class USSDServiceKT extends AccessibilityService {
             return;
         }
         String response = event.getText().toString();
-        if (LoginView(event) && notInputText(event)) {
-            // first view or logView, do nothing, pass / FIRST MESSAGE & move forward
-            clickOnButton(event, 0);
-            ussd.callBack.response(response);
-        } else if (problemView(event) || LoginView(event)) {
-            // deal down
-            clickOnButton(event, 1);
-            ussd.callBack.over(response);
-        } else if (isUSSDWidget(event)) {
-            Timber.d("catch a USSD widget/Window");
+
+        if(!ussd.isDefault()){
+
+            if (LoginView(event) && notInputText(event)) {
+                // first view or logView, do nothing, pass / FIRST MESSAGE & move forward
+                clickOnButton(event, 0);
+            } else if (problemView(event) || LoginView(event)) {
+                // deal down
+                clickOnButton(event, 1);
+                ussd.callBack.over(response);
+            } else if (isUSSDWidget(event)) {
+                Timber.d("catch a USSD widget/Window");
+                if (notInputText(event)) {
+                    // not more input panels / LAST MESSAGE
+                    // sent 'OK' button
+                    Timber.d("No inputText found & closing USSD process");
+                    clickOnButton(event, 0);
+                    ussd.stopRunning();
+                    ussd.callBack.over(response);
+                } else {
+                    // sent option 1
+                    if (ussd.getSendType())
+                        ussd.getCallBackMessage().invoke(response);
+                    else ussd.callBack.response(response);
+                }
+            }
+
+        } else {
             if (notInputText(event)) {
                 // not more input panels / LAST MESSAGE
                 // sent 'OK' button
@@ -47,11 +65,6 @@ public class USSDServiceKT extends AccessibilityService {
                 clickOnButton(event, 0);
                 ussd.stopRunning();
                 ussd.callBack.over(response);
-            } else {
-                // sent option 1
-                if (ussd.getSendType())
-                    ussd.getCallBackMessage().invoke(response);
-                else ussd.callBack.response(response);
             }
         }
 

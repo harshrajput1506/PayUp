@@ -7,4 +7,5 @@ interface USSDApi {
     fun cancel()
     fun callUSSDRequest(context: Context, code: String, simSlot: Int, callBack:USSDBuilder.CallBack)
     fun verifyAccessibilityAccess(context: Context):Boolean
+    fun setDefault(isDefault : Boolean)
 }

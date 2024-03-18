@@ -10,6 +10,7 @@ import android.provider.Settings
 import android.telecom.TelecomManager
 import android.view.accessibility.AccessibilityManager
 import `in`.hypernation.payup.data.USSD.USSDApi
+import timber.log.Timber
 
 
 @SuppressLint("StaticFieldLeak")
@@ -21,9 +22,11 @@ object USSDBuilder : USSDApi, USSDInterface {
         "simId", "simnum", "phone_type", "slotId", "slotIdx")
 
     val map : HashMap<String, List<String>> = hashMapOf(
-        "BYPASS" to listOf("select Language", "Language", "Select Option"),
-        "LOGIN" to listOf("WELCOME", "bank's name", "UPI PIN"),
-        "ERROR" to listOf("timed out", "Timed", "timed", "Timed out")
+        "BYPASS1" to listOf("Select Language", "Language"),
+        "BYPASS0" to listOf("Select Option"),
+        "LOGIN" to listOf("WELCOME", "bank's name", "UPI PIN", "Welcome"),
+        "ERROR" to listOf("timed out", "Timed", "timed", "Timed out"),
+        "FINAL" to listOf("account balance")
     )
 
     lateinit var context : Context
@@ -34,6 +37,8 @@ object USSDBuilder : USSDApi, USSDInterface {
     var isRunning : Boolean? = false
         private set
 
+    var isDefault: Boolean? = false
+        private set
     var sendType : Boolean? = false
         private set
 
@@ -55,7 +60,8 @@ object USSDBuilder : USSDApi, USSDInterface {
     }
 
     override fun cancel() {
-        TODO("Not yet implemented")
+        isRunning = false
+        USSDServiceKT.cancel()
     }
 
     @SuppressLint("MissingPermission")
@@ -63,24 +69,26 @@ object USSDBuilder : USSDApi, USSDInterface {
         sendType = false
         this.context = context
         this.callBack = callBack
+        Timber.d(verifyAccessibilityAccess(context).toString())
         if (verifyAccessibilityAccess(context)) {
             dialUp(code, simSlot)
+            Timber.d("Dial UP")
         } else {
             callBack.over("Check your accessibility")
         }
 
     }
 
-    override fun verifyAccessibilityAccess(context: Context): Boolean {
-        val isAccessibilityEnabled = isAccessibilityServicesEnable(context)
-        if(!isAccessibilityEnabled) openSettingsAccessibility(context as Activity)
-        return isAccessibilityEnabled
+    override fun verifyAccessibilityAccess(context: Context): Boolean  =
+        isAccessibilityServicesEnable(context).also {
+            if (!it) openSettingsAccessibility(context as Activity)
+        }
 
+    override fun setDefault(isDefault: Boolean) {
+        this.isDefault = isDefault
     }
 
-    override fun sendData(text: String) {
-        TODO("Not yet implemented")
-    }
+    override fun sendData(text: String) = USSDServiceKT.send(text)
 
     override fun stopRunning() {
         isRunning = false
@@ -93,7 +101,7 @@ object USSDBuilder : USSDApi, USSDInterface {
 
     private fun dialUp(ussdPhoneNumber: String, simSlot: Int) {
         when {
-            !map.containsKey("LOGIN") || !map.containsKey("ERROR") || !map.containsKey("BYPASS") ->
+            !map.containsKey("LOGIN") || !map.containsKey("ERROR") || !map.containsKey("BYPASS1") ->
                 callBack.over("Bad Mapping structure")
             ussdPhoneNumber.isEmpty() -> callBack.over("Bad ussd number")
             else -> {
@@ -108,13 +116,13 @@ object USSDBuilder : USSDApi, USSDInterface {
 
     @SuppressLint("MissingPermission")
     private fun getActionCallIntent(uri: Uri?, simSlot: Int): Intent {
-        val telcomManager = context.getSystemService(Context.TELECOM_SERVICE) as? TelecomManager
+        val telecomManager = context.getSystemService(Context.TELECOM_SERVICE) as? TelecomManager
         return Intent(Intent.ACTION_CALL, uri).apply {
             simSlotName.map { sim -> putExtra(sim, simSlot) }
             flags = Intent.FLAG_ACTIVITY_NEW_TASK
             putExtra("com.android.phone.force.slot", true)
             putExtra("Cdma_Supp", true)
-            telcomManager?.callCapablePhoneAccounts?.let { handles ->
+            telecomManager?.callCapablePhoneAccounts?.let { handles ->
                 if (handles.size > simSlot)
                     putExtra("android.telecom.extra.PHONE_ACCOUNT_HANDLE", handles[simSlot])
             }
@@ -122,18 +130,29 @@ object USSDBuilder : USSDApi, USSDInterface {
     }
 
     private fun isAccessibilityServicesEnable(context: Context): Boolean {
-        (context.getSystemService(Context.ACCESSIBILITY_SERVICE) as? AccessibilityManager)?.apply {
+        Timber.d(context.packageName)
+        Timber.d(Settings.Secure.getInt(context.applicationContext.contentResolver,
+            Settings.Secure.ACCESSIBILITY_ENABLED).toString())
+        (context.getSystemService(Context.ACCESSIBILITY_SERVICE) as AccessibilityManager).apply {
             installedAccessibilityServiceList.forEach { service ->
+                Timber.d(service.id)
+                Timber.d(service.id.contains(context.packageName).toString())
                 if (service.id.contains(context.packageName) &&
                     Settings.Secure.getInt(context.applicationContext.contentResolver,
-                        Settings.Secure.ACCESSIBILITY_ENABLED) == 1)
+                        Settings.Secure.ACCESSIBILITY_ENABLED) == 1) {
+                    Timber.d(Settings.Secure.getString(context.applicationContext.contentResolver,
+                        Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES))
                     Settings.Secure.getString(context.applicationContext.contentResolver,
                         Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES)?.let {
-                        if (it.split(':').contains(service.id)) return true
+                            Timber.d(it.contains(service.id).toString())
+                        if (it.contains(context.packageName)) return true
                     }
+                }
+
             }
         }
         return false
+
     }
 
     private fun openSettingsAccessibility(activity: Activity) =

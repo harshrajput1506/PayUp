@@ -2,6 +2,7 @@ package `in`.hypernation.payup.presentation.home
 
 import android.util.Log
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -33,6 +34,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -50,6 +52,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import `in`.hypernation.payup.R
 import `in`.hypernation.payup.ui.theme.Black70
 import `in`.hypernation.payup.ui.theme.GhostBlack
@@ -57,18 +60,22 @@ import `in`.hypernation.payup.ui.theme.GhostBlack60
 import `in`.hypernation.payup.ui.theme.Green
 import `in`.hypernation.payup.ui.theme.Peach
 import `in`.hypernation.payup.ui.theme.notoSansFamily
+import org.koin.androidx.compose.koinViewModel
 import timber.log.Timber
 
 
 @Composable
-fun HomeView(){
-    val isLink by remember {
-        mutableStateOf(false)
-    }
+fun HomeView(
+    viewModel : HomeViewModel = koinViewModel()
+){
+    val linkState = viewModel.linkState.collectAsState()
+    val isLink = linkState.value.isLink
     Scaffold (
         contentColor = MaterialTheme.colorScheme.surface,
         floatingActionButton = {
-            ScanFAB (onClick = {})
+            ScanFAB (onClick = {
+                viewModel.handleEvent(HomeEvent.OnPayWithQR)
+            })
         },
         floatingActionButtonPosition = FabPosition.Center
     ){
@@ -154,6 +161,7 @@ fun HomeView(){
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(top = 8.dp)
+                                    .clickable { viewModel.handleEvent(HomeEvent.Linked(0))}
                             )
                         } else {
                             Text(
@@ -193,8 +201,12 @@ fun HomeView(){
 
                 }
 
-                RoundButtonCard(icon = R.drawable.scan, text = "Scan any QR Code")
-                RoundButtonCard(icon = R.drawable.at_the_rate, text = "Pay with UPI ID", dp = 1.dp)
+                RoundButtonCard(icon = R.drawable.scan, text = "Scan any QR Code"){
+                    viewModel.handleEvent(HomeEvent.OnPayWithQR)
+                }
+                RoundButtonCard(icon = R.drawable.at_the_rate, text = "Pay with UPI ID", dp = 1.dp){
+                    viewModel.handleEvent(HomeEvent.OnPayWithUPI)
+                }
             }
 
         }
@@ -261,7 +273,7 @@ fun BalanceCard(){
 }
 
 @Composable
-fun RoundButtonCard(icon : Int, text : String, dp : Dp = 0.dp){
+fun RoundButtonCard(icon : Int, text : String, dp : Dp = 0.dp, onClick: () -> Unit){
     ElevatedCard (
         colors = CardDefaults.elevatedCardColors(
             containerColor = MaterialTheme.colorScheme.secondary
@@ -274,6 +286,9 @@ fun RoundButtonCard(icon : Int, text : String, dp : Dp = 0.dp){
             .padding(top = 10.dp, bottom = 10.dp, start = 30.dp, end = 30.dp)
             .fillMaxWidth()
             .wrapContentHeight()
+            .clickable {
+                onClick()
+            }
     ) {
         Card (
             colors = CardDefaults.cardColors(
@@ -292,7 +307,9 @@ fun RoundButtonCard(icon : Int, text : String, dp : Dp = 0.dp){
                     painter = painterResource(id = icon),
                     contentDescription = text,
                     colorFilter = ColorFilter.tint(Color.Black),
-                    modifier = Modifier.size(24.dp).padding(dp)
+                    modifier = Modifier
+                        .size(24.dp)
+                        .padding(dp)
 
                 )
                 Text(

@@ -74,7 +74,7 @@ object USSDBuilder : USSDApi, USSDInterface {
             dialUp(code, simSlot)
             Timber.d("Dial UP")
         } else {
-            callBack.over("Check your accessibility")
+            callBack.over("Check your accessibility", isError = true)
         }
 
     }
@@ -95,15 +95,15 @@ object USSDBuilder : USSDApi, USSDInterface {
     }
 
     interface CallBack{
-        fun response(message: String)
-        fun over(message: String)
+        fun response(message: String, isError : Boolean)
+        fun over(message: String, isError: Boolean)
     }
 
     private fun dialUp(ussdPhoneNumber: String, simSlot: Int) {
         when {
             !map.containsKey("LOGIN") || !map.containsKey("ERROR") || !map.containsKey("BYPASS1") ->
-                callBack.over("Bad Mapping structure")
-            ussdPhoneNumber.isEmpty() -> callBack.over("Bad ussd number")
+                callBack.over("Bad Mapping structure", isError = true)
+            ussdPhoneNumber.isEmpty() -> callBack.over("Bad ussd number", isError = true)
             else -> {
                 var phone = Uri.encode("#")?.let {
                     ussdPhoneNumber.replace("#", it)

@@ -60,6 +60,7 @@ import `in`.hypernation.payup.ui.theme.GhostBlack60
 import `in`.hypernation.payup.ui.theme.Green
 import `in`.hypernation.payup.ui.theme.Peach
 import `in`.hypernation.payup.ui.theme.notoSansFamily
+import `in`.hypernation.payup.utils.RUPEE_SYMBOL
 import org.koin.androidx.compose.koinViewModel
 import timber.log.Timber
 
@@ -68,8 +69,7 @@ import timber.log.Timber
 fun HomeView(
     viewModel : HomeViewModel = koinViewModel()
 ){
-    val linkState = viewModel.linkState.collectAsState()
-    val isLink = linkState.value.isLink
+    val linkState = viewModel.linkState.value
     Scaffold (
         contentColor = MaterialTheme.colorScheme.surface,
         floatingActionButton = {
@@ -79,10 +79,12 @@ fun HomeView(
         },
         floatingActionButtonPosition = FabPosition.Center
     ){
-        Surface(modifier = Modifier
-            .fillMaxSize()
-            .padding(it)
-            , color = MaterialTheme.colorScheme.surface) {
+        Surface(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(it),
+            color = MaterialTheme.colorScheme.surface
+        ) {
             Column (
                 modifier = Modifier.fillMaxSize()
             ) {
@@ -145,7 +147,34 @@ fun HomeView(
                             .weight(1f)
                             .padding(top = 12.dp)
                     ) {
-                        if(!isLink){
+                        if(linkState.account.isLinked){
+                            Text(
+                                text = "you’re linked to",
+                                color = MaterialTheme.colorScheme.onSurface,
+                                fontSize = 18.sp,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+
+                            if(linkState.account.bankName !=null){
+                                Text(
+                                    text = linkState.account.bankName,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Normal,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                )
+                            }
+                            Column (
+                                modifier = Modifier.fillMaxSize(),
+                                verticalArrangement = Arrangement.Bottom
+                            ) {
+                                BalanceCard(linkState){
+                                    viewModel.handleEvent(HomeEvent.OnCheckBalance)
+                                }
+                            }
+
+                        } else {
                             Text(
                                 text = "your UPI is not linked yet.",
                                 color = MaterialTheme.colorScheme.onSurface,
@@ -161,31 +190,8 @@ fun HomeView(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(top = 8.dp)
-                                    .clickable { viewModel.handleEvent(HomeEvent.Linked(0))}
+                                    .clickable { viewModel.handleEvent(HomeEvent.Linked(0)) }
                             )
-                        } else {
-                            Text(
-                                text = "you’re linked to",
-                                color = MaterialTheme.colorScheme.onSurface,
-                                fontSize = 18.sp,
-                                modifier = Modifier.fillMaxWidth()
-                            )
-
-                            Text(
-                                text = "Bank Name",
-                                color = MaterialTheme.colorScheme.onSurface,
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.Normal,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                            )
-                            Column (
-                                modifier = Modifier.fillMaxSize(),
-                                verticalArrangement = Arrangement.Bottom
-                            ) {
-                                BalanceCard()
-                            }
-
 
                         }
 
@@ -216,7 +222,7 @@ fun HomeView(
 
 
 @Composable
-fun BalanceCard(){
+fun BalanceCard(linkState: LinkState, onCheckBalance : () -> Unit){
     ElevatedCard (
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.elevatedCardColors(
@@ -249,7 +255,7 @@ fun BalanceCard(){
                 )
 
                 Text(
-                    text = "₹ 200.00",
+                    text = linkState.account?.bankBalance ?: "$RUPEE_SYMBOL ---" ,
                     color = GhostBlack,
                     fontSize = 20.sp,
                     fontWeight = FontWeight.SemiBold,
@@ -264,6 +270,9 @@ fun BalanceCard(){
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(top = 16.dp, bottom = 20.dp)
+                        .clickable {
+                            onCheckBalance()
+                        }
                 )
             }
 

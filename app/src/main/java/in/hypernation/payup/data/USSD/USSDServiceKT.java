@@ -11,6 +11,7 @@ import android.view.accessibility.AccessibilityNodeInfo;
 import java.util.ArrayList;
 import java.util.List;
 
+import in.hypernation.payup.utils.ConstantKt;
 import timber.log.Timber;
 
 public class USSDServiceKT extends AccessibilityService {
@@ -31,40 +32,32 @@ public class USSDServiceKT extends AccessibilityService {
         }
         String response = event.getText().toString();
 
-        if(!ussd.isDefault()){
-
-            if (LoginView(event) && notInputText(event)) {
-                // first view or logView, do nothing, pass / FIRST MESSAGE & move forward
-                clickOnButton(event, 0);
-            } else if (problemView(event) || LoginView(event)) {
-                // deal down
-                clickOnButton(event, 1);
-                ussd.callBack.over(response);
-            } else if (isUSSDWidget(event)) {
-                Timber.d("catch a USSD widget/Window");
-                if (notInputText(event)) {
-                    // not more input panels / LAST MESSAGE
-                    // sent 'OK' button
-                    Timber.d("No inputText found & closing USSD process");
-                    clickOnButton(event, 0);
-                    ussd.stopRunning();
-                    ussd.callBack.over(response);
-                } else {
-                    // sent option 1
-                    if (ussd.getSendType())
-                        ussd.getCallBackMessage().invoke(response);
-                    else ussd.callBack.response(response);
-                }
-            }
-
-        } else {
+        if (isWelcomeView(event)) {
+            // first view or logView, do nothing, pass / FIRST MESSAGE & move forward
+            Timber.d("No inputText found & Welcome View");
+            clickOnButton(event, 0);
+        } else if (problemView(event) || LoginView(event)) {
+            // deal down
+            clickOnButton(event, 1);
+            ussd.callBack.over(response, true);
+        } else if (isUSSDWidget(event)) {
+            Timber.d("catch a USSD widget/Window");
             if (notInputText(event)) {
                 // not more input panels / LAST MESSAGE
                 // sent 'OK' button
                 Timber.d("No inputText found & closing USSD process");
                 clickOnButton(event, 0);
                 ussd.stopRunning();
-                ussd.callBack.over(response);
+                if(checkResult(event)){
+                    ussd.callBack.over(response, false);
+                } else {
+                    ussd.callBack.over(response, true);
+                }
+            } else {
+                // sent option 1
+                if (ussd.getSendType())
+                    ussd.getCallBackMessage().invoke(response);
+                else ussd.callBack.response(response, false);
             }
         }
 
@@ -115,6 +108,17 @@ public class USSDServiceKT extends AccessibilityService {
         for (AccessibilityNodeInfo leaf : getLeaves(event))
             if (leaf.getClassName().equals("android.widget.EditText")) return false;
         return true;
+    }
+
+    protected static boolean checkResult(AccessibilityEvent event){
+        String message = event.getText().get(0).toString();
+        if(message.toLowerCase().contains(ConstantKt.BALANCE_VIEW.toLowerCase())) return true;
+        return false;
+    }
+
+    protected static boolean isWelcomeView(AccessibilityEvent event){
+        return notInputText(event)
+                && event.getText().get(0).toString().contains(ConstantKt.WELCOME_BODY);
     }
 
     /**

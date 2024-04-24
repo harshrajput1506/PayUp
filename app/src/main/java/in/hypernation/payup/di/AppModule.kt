@@ -1,5 +1,10 @@
 package `in`.hypernation.payup.di
 
+import com.google.mlkit.vision.barcode.common.Barcode
+import com.google.mlkit.vision.codescanner.GmsBarcodeScanner
+import com.google.mlkit.vision.codescanner.GmsBarcodeScannerOptions
+import com.google.mlkit.vision.codescanner.GmsBarcodeScanning
+import `in`.hypernation.payup.MainActivity
 import `in`.hypernation.payup.data.USSD.USSDApi
 import `in`.hypernation.payup.data.USSD.USSDBuilder
 import `in`.hypernation.payup.data.local.PreferenceManager
@@ -16,7 +21,28 @@ val appModule = module {
     viewModel { HomeViewModel(get(), get()) }
     viewModel { PermissionViewModel() }
     single<USSDApi> {USSDBuilder}
-    single<HomeRepository> {HomeRepositoryImpl(get(), get(), get())}
+    single<HomeRepository> {HomeRepositoryImpl(get(), get(), get(), get())}
     single {StringManipulation()}
     single { PreferenceManager(get()) }
+
+    factory {
+        GmsBarcodeScannerOptions.Builder()
+            .setBarcodeFormats(Barcode.FORMAT_QR_CODE)
+            .build()
+    }
+
+    factory {
+        GmsBarcodeScanning.getClient(get(), get())
+    }
+
+    /*scope<HomeViewModel> {
+        scoped<GmsBarcodeScannerOptions> { GmsBarcodeScannerOptions.Builder()
+            .setBarcodeFormats(Barcode.FORMAT_QR_CODE)
+            .build()
+        }
+        scoped<GmsBarcodeScanner> {
+            GmsBarcodeScanning.getClient(get(), get())
+        }
+    }*/
+
 }

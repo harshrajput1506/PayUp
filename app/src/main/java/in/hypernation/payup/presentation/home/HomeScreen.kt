@@ -17,6 +17,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -25,6 +27,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.Icon
@@ -48,26 +51,33 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import `in`.hypernation.payup.R
-import `in`.hypernation.payup.ui.theme.Black70
+import `in`.hypernation.payup.data.models.Account
+import `in`.hypernation.payup.presentation.permissions.AccessibilityPermissionProvider
+import `in`.hypernation.payup.presentation.permissions.PermissionDialog
+
 import `in`.hypernation.payup.ui.theme.GhostBlack
 import `in`.hypernation.payup.ui.theme.GhostBlack60
-import `in`.hypernation.payup.ui.theme.Green
+
 import `in`.hypernation.payup.ui.theme.Peach
-import `in`.hypernation.payup.ui.theme.notoSansFamily
+import `in`.hypernation.payup.ui.theme.DMSansFamily
+import `in`.hypernation.payup.ui.theme.GhostBlack80
 import `in`.hypernation.payup.utils.RUPEE_SYMBOL
 import org.koin.androidx.compose.koinViewModel
 import timber.log.Timber
+import java.lang.reflect.Array
 
 
 @Composable
 fun HomeView(
-    viewModel : HomeViewModel = koinViewModel()
+    viewModel : HomeViewModel = koinViewModel(),
+    openSettings : () -> Unit
 ){
     val linkState = viewModel.linkState.value
     Scaffold (
@@ -107,12 +117,14 @@ fun HomeView(
                             text = "hi,",
                             color = MaterialTheme.colorScheme.onSurface,
                             fontSize = 16.sp,
+                            fontFamily = DMSansFamily,
                             fontStyle = FontStyle.Normal
                         )
                         Text(
                             text = "what a beautiful day!",
                             color = MaterialTheme.colorScheme.onSurface,
                             fontSize = 16.sp,
+                            fontFamily = DMSansFamily,
                             fontStyle = FontStyle.Normal
                         )
 
@@ -128,10 +140,10 @@ fun HomeView(
                             painter = painterResource(id = R.drawable.settings),
                             contentDescription = "setting",
                             modifier = Modifier
-                                .size(24.dp)
+                                .size(24.dp),
+                            colorFilter = ColorFilter.tint(GhostBlack)
                         )
                     }
-
 
                 } // Top bar
                 Row (
@@ -152,6 +164,7 @@ fun HomeView(
                                 text = "you’re linked to",
                                 color = MaterialTheme.colorScheme.onSurface,
                                 fontSize = 18.sp,
+                                fontFamily = DMSansFamily,
                                 modifier = Modifier.fillMaxWidth()
                             )
 
@@ -160,14 +173,16 @@ fun HomeView(
                                     text = linkState.account.bankName,
                                     color = MaterialTheme.colorScheme.onSurface,
                                     fontSize = 12.sp,
+                                    fontFamily = DMSansFamily,
                                     fontWeight = FontWeight.Normal,
                                     modifier = Modifier
                                         .fillMaxWidth()
                                 )
                             }
                             Column (
-                                modifier = Modifier.fillMaxSize(),
-                                verticalArrangement = Arrangement.Bottom
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(top = 15.dp)
                             ) {
                                 BalanceCard(linkState){
                                     viewModel.handleEvent(HomeEvent.OnCheckBalance)
@@ -179,6 +194,7 @@ fun HomeView(
                                 text = "your UPI is not linked yet.",
                                 color = MaterialTheme.colorScheme.onSurface,
                                 fontSize = 18.sp,
+                                fontFamily = DMSansFamily,
                                 modifier = Modifier.fillMaxWidth()
                             )
 
@@ -186,9 +202,9 @@ fun HomeView(
                                 text = "Link Now",
                                 color = Peach,
                                 fontSize = 14.sp,
-                                fontWeight = FontWeight.SemiBold,
+                                fontFamily = DMSansFamily,
+                                fontWeight = FontWeight.Bold,
                                 modifier = Modifier
-                                    .fillMaxWidth()
                                     .padding(top = 8.dp)
                                     .clickable { viewModel.handleEvent(HomeEvent.Linked(0)) }
                             )
@@ -207,15 +223,24 @@ fun HomeView(
 
                 }
 
-                RoundButtonCard(icon = R.drawable.scan, text = "Scan any QR Code"){
-                    viewModel.handleEvent(HomeEvent.OnPayWithQR)
-                }
-                RoundButtonCard(icon = R.drawable.at_the_rate, text = "Pay with UPI ID", dp = 1.dp){
-                    viewModel.handleEvent(HomeEvent.OnPayWithUPI)
+                MenuGridView(menus = viewModel.menuItems) {
+
                 }
             }
 
         }
+    }
+    Timber.tag("TAG").d("HomeView: Accessibility ${viewModel.linkState}")
+    if(linkState.message == "Accessibility Permission") {
+        PermissionDialog(
+            permissionTextProvider = AccessibilityPermissionProvider(),
+            isPermanentlyDeclined = true,
+            onDismiss = {viewModel.handleEvent(HomeEvent.OnDismissDialog)},
+            onOkClick = { /*TODO*/ },
+            onGoToAppSettingsClick = {
+                viewModel.handleEvent(HomeEvent.OnDismissDialog)
+                openSettings()
+            })
     }
 
 }
@@ -223,110 +248,84 @@ fun HomeView(
 
 @Composable
 fun BalanceCard(linkState: LinkState, onCheckBalance : () -> Unit){
-    ElevatedCard (
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.elevatedCardColors(
-            containerColor = Green
-        ),
-        elevation = CardDefaults.elevatedCardElevation(
-            defaultElevation = 10.dp
-        ),
-        modifier = Modifier
-            .fillMaxWidth()
-
+    Column (
     ) {
-        Card (
-            shape = RoundedCornerShape(20.dp),
-            colors = CardDefaults.elevatedCardColors(
-                containerColor = MaterialTheme.colorScheme.background
-            ),
+        Text(
+            text = "Last Balance",
+            color = GhostBlack60,
+            fontSize = 10.sp,
+            fontFamily = DMSansFamily,
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        Text(
+            text = linkState.account.bankBalance ?: "$RUPEE_SYMBOL ---" ,
+            color = GhostBlack,
+            fontSize = 20.sp,
+            fontWeight = FontWeight.Bold,
+            fontFamily = DMSansFamily,
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        Text(
+            text = "Update Balance",
+            color = Peach,
+            fontSize = 10.sp,
+            fontFamily = DMSansFamily,
+            fontWeight = FontWeight.Bold,
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(start = 8.dp)
-        ) {
-            Column (
-                modifier = Modifier.padding(16.dp)
-            ) {
-                Text(
-                    text = "Last Balance",
-                    color = GhostBlack60,
-                    fontSize = 10.sp,
-                    modifier = Modifier.fillMaxWidth()
-                )
-
-                Text(
-                    text = linkState.account?.bankBalance ?: "$RUPEE_SYMBOL ---" ,
-                    color = GhostBlack,
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier.fillMaxWidth()
-                )
-
-                Text(
-                    text = "Update Balance",
-                    color = Peach,
-                    fontSize = 10.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 16.dp, bottom = 20.dp)
-                        .clickable {
-                            onCheckBalance()
-                        }
-                )
-            }
-
-        }
+                .padding(vertical = 4.dp)
+                .clickable {
+                    onCheckBalance()
+                }
+        )
     }
 
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RoundButtonCard(icon : Int, text : String, dp : Dp = 0.dp, onClick: () -> Unit){
-    ElevatedCard (
-        colors = CardDefaults.elevatedCardColors(
-            containerColor = MaterialTheme.colorScheme.secondary
-        ),
-        elevation = CardDefaults.elevatedCardElevation(
-            defaultElevation = 8.dp
-        ),
-        shape = RoundedCornerShape(15.dp),
-        modifier = Modifier
-            .padding(top = 10.dp, bottom = 10.dp, start = 30.dp, end = 30.dp)
-            .fillMaxWidth()
-            .wrapContentHeight()
-            .clickable {
-                onClick()
-            }
+fun MenuGridView(menus : List<Pair<String, Int>>, onClick: () -> Unit){
+    LazyVerticalGrid(
+        columns = GridCells.Fixed(3),
+        modifier = Modifier.padding(
+            horizontal = 30.dp,
+            vertical = 10.dp
+        )
     ) {
-        Card (
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.background
-            ),
-            shape = RoundedCornerShape(15.dp),
-            modifier = Modifier
-                .padding(start = 8.dp)
-                .fillMaxWidth()
-        ) {
-            Row (
-                modifier = Modifier.padding(start = 30.dp, end = 30.dp, top = 20.dp, bottom = 20.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Image(
-                    painter = painterResource(id = icon),
-                    contentDescription = text,
-                    colorFilter = ColorFilter.tint(Color.Black),
-                    modifier = Modifier
-                        .size(24.dp)
-                        .padding(dp)
+        items(menus.size){index ->
+            Card(
+                onClick = { onClick },
+                colors = CardDefaults.cardColors(
+                    containerColor = Color.Transparent
+                )
 
-                )
-                Text(
-                    text = text,
-                    fontSize = 14.sp,
-                    color = Color.Black,
-                    modifier = Modifier.padding(start = 15.dp)
-                )
+            ) {
+                Column(
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(10.dp)
+                ) {
+                    Image(
+                        painter = painterResource(id = menus[index].second),
+                        contentDescription = "Menu Image",
+                        alignment = Alignment.Center,
+                        modifier = Modifier.size(24.dp),
+                        colorFilter = ColorFilter.tint(GhostBlack)
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = menus[index].first,
+                        fontFamily = DMSansFamily,
+                        fontSize = 10.sp,
+                        color = GhostBlack,
+                        lineHeight = 14.sp,
+                        textAlign = TextAlign.Center,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
             }
         }
     }
@@ -342,10 +341,11 @@ fun ScanFAB(onClick: () -> Unit) {
             Image(
                 painter = painterResource(id = R.drawable.scan),
                 contentDescription = "scan btn",
-                modifier = Modifier.size(24.dp)
+                modifier = Modifier.size(24.dp),
+                colorFilter = ColorFilter.tint(Color.White)
             )
         } },
-        text = { Text(text = "Scan & Pay", fontSize = 16.sp, fontWeight = FontWeight.Normal, modifier = Modifier.padding(end = 24.dp)) },
+        text = { Text(text = "Scan & Pay", fontSize = 16.sp, fontWeight = FontWeight.Medium, fontFamily = DMSansFamily, modifier = Modifier.padding(end = 24.dp)) },
         containerColor = MaterialTheme.colorScheme.primary,
         shape = RoundedCornerShape(100.dp),
         modifier = Modifier.padding(12.dp)
@@ -385,4 +385,18 @@ fun AvatarCard(){
 
 
     }
+}
+
+@Composable
+@Preview(
+    showBackground = true
+)
+fun PreviewBalanceCard(){
+    BalanceCard(linkState = LinkState(
+        account = Account(
+            bankBalance = "300",
+            isLinked = true,
+            bankName = "Kotak"
+        )
+    )) {}
 }

@@ -10,7 +10,9 @@ import android.os.Bundle
 import android.provider.Settings
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import `in`.hypernation.payup.data.USSD.USSDBuilder
@@ -48,11 +50,13 @@ class MainActivity : ComponentActivity() {
                     modules(appModule)
                 }) {
                     // Compose to preview with Koin
-                    HomeView()
+                    HomeView(){
+                        openSettings(Settings.ACTION_ACCESSIBILITY_SETTINGS)
+                    }
                     PermissionView(requestPermissions = requestPermission, isPermanentlyDeclined = {perm ->
                          !shouldShowRequestPermissionRationale(perm)
                     }) {
-                        openSettings()
+                        openSettings(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
                     }
                 }
 
@@ -61,9 +65,8 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-fun Activity.openSettings(){
+fun Activity.openSettings(setting : String){
     Intent(
-        Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
-        Uri.fromParts("package", packageName, null)
+        setting  //Settings.ACTION_APPLICATION_DETAILS_SETTINGS
     ).also ( ::startActivity )
 }

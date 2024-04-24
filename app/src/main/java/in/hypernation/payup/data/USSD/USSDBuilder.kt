@@ -79,10 +79,7 @@ object USSDBuilder : USSDApi, USSDInterface {
 
     }
 
-    override fun verifyAccessibilityAccess(context: Context): Boolean  =
-        isAccessibilityServicesEnable(context).also {
-            if (!it) openSettingsAccessibility(context as Activity)
-        }
+    override fun verifyAccessibilityAccess(context: Context): Boolean  = isAccessibilityServicesEnable(context)
 
     override fun setDefault(isDefault: Boolean) {
         this.isDefault = isDefault
@@ -158,7 +155,7 @@ object USSDBuilder : USSDApi, USSDInterface {
     private fun openSettingsAccessibility(activity: Activity) =
         with(AlertDialog.Builder(activity)) {
             setTitle("USSD Accessibility permission")
-            setMessage("You must enable accessibility permissions for the app %s".format(getNameApp(activity)))
+            setMessage("You must enable accessibility permissions for the app payup")
             setCancelable(true)
             setNeutralButton("ok") { _, _ ->
                 activity.startActivityForResult(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS), 1)
@@ -166,8 +163,4 @@ object USSDBuilder : USSDApi, USSDInterface {
             create().show()
         }
 
-    private fun getNameApp(activity: Activity): String = when (activity.applicationInfo.labelRes) {
-        0 -> activity.applicationInfo.nonLocalizedLabel.toString()
-        else -> activity.getString(activity.applicationInfo.labelRes)
-    }
 }

@@ -22,10 +22,6 @@ fun PermissionView(
     openSettings: () -> Unit
 ){
 
-    val key by remember {
-        mutableStateOf("FIRST_TIME_LOGIN")
-    }
-
     val dialogQueue = viewModel.visibleDialogQueue
 
     val permissionLauncher = rememberLauncherForActivityResult(

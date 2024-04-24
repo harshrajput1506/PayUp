@@ -6,5 +6,6 @@ sealed class HomeEvent {
     data object OnPayWithQR : HomeEvent()
     data object OnPayWithUPI : HomeEvent()
     data object OnCheckBalance : HomeEvent()
+    data object OnDismissDialog : HomeEvent()
 
 }

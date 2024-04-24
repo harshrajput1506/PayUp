@@ -1,13 +1,19 @@
 package `in`.hypernation.payup.presentation.home
 
+import androidx.compose.material.icons.Icons
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import `in`.hypernation.payup.R
 import `in`.hypernation.payup.data.USSD.USSDResponse
 import `in`.hypernation.payup.data.local.PreferenceManager
 import `in`.hypernation.payup.data.models.Account
 import `in`.hypernation.payup.data.repo.HomeRepository
+import `in`.hypernation.payup.utils.BALANCE_CODE
+import `in`.hypernation.payup.utils.USSD_CODE
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import timber.log.Timber
 
@@ -17,7 +23,16 @@ class HomeViewModel(
 ) : ViewModel() {
 
     private val _linkState = mutableStateOf(LinkState())
-    val linkState : State<LinkState> = _linkState
+    val linkState = _linkState
+
+    private val _scanState = MutableStateFlow(ScanState())
+    val scanState = _scanState.asStateFlow()
+
+    val menuItems = listOf(
+        Pair("Scan any QR Code", R.drawable.scan),
+        Pair("Pay UPI ID", R.drawable.at_the_rate),
+        Pair("Bank Transfer", R.drawable.account_balance)
+    )
 
     init {
         val account = Account(
@@ -35,15 +50,23 @@ class HomeViewModel(
             HomeEvent.OnPayWithQR -> payWithQR()
             HomeEvent.OnPayWithUPI -> payWithUPI()
             HomeEvent.OnCheckBalance -> checkBalance()
+            HomeEvent.OnDismissDialog -> dismissDialog()
         }
+    }
 
+    private fun dismissDialog() {val account = Account(
+        bankName = preferenceManager.getBankName(),
+        isLinked = preferenceManager.getAccountLinkStatus(),
+        bankBalance = null
+    )
+        _linkState.value = LinkState(account = account)
     }
 
     private fun linkUPI() {
         //ussdApi.cancel()
         viewModelScope.launch {
             //val account : Account = repository.linkAccount(0)
-            repository.linkAccount(0) { response ->
+            repository.linkAccount(USSD_CODE,0) { response ->
                 when (response) {
                     is USSDResponse.Success -> {
                         _linkState.value = response.data?.let {
@@ -73,7 +96,7 @@ class HomeViewModel(
 
     private fun checkBalance(){
         viewModelScope.launch {
-            repository.checkBalance(0){response ->
+            repository.checkBalance(BALANCE_CODE,0){ response ->
                 when(response){
                     is USSDResponse.Success -> {
                         _linkState.value = LinkState(
@@ -81,11 +104,13 @@ class HomeViewModel(
                                 bankBalance = response.data?.bankBalance,
                                 isLinked = preferenceManager.getAccountLinkStatus(),
                                 bankName = preferenceManager.getBankName()
-                            )
+                            ),
+                            message = response.message
                         )
                     }
 
                     is USSDResponse.Error -> {
+                        Timber.d(response.message)
                         _linkState.value = LinkState(
                             account = Account(
                                 bankBalance = null,
@@ -94,14 +119,27 @@ class HomeViewModel(
                             ),
                             message = response.message
                         )
+                        Timber.d(_linkState.toString())
                     }
+
+                    else -> {
+                        _linkState.value = LinkState(isLoading = true)
+                    }
+
                 }
             }
         }
     }
 
     private fun payWithQR() {
-
+        viewModelScope.launch {
+            repository.scanQr().collect{
+                _scanState.value = scanState.value.copy(
+                    details = it
+                )
+                Timber.d("Scan Details : $it")
+            }
+        }
     }
 
     private fun payWithUPI() {

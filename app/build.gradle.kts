@@ -65,4 +65,5 @@ dependencies {
     debugImplementation(libs.androidx.ui.test.manifest)
     implementation(libs.timber)
     implementation(libs.koin.androidx.compose)
+    implementation(libs.play.services.code.scanner)
 }

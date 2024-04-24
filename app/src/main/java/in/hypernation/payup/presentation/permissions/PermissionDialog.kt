@@ -26,6 +26,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogProperties
+import `in`.hypernation.payup.data.USSD.USSDBuilder
+import `in`.hypernation.payup.ui.theme.DMSansFamily
 import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -54,10 +56,13 @@ fun PermissionDialog(
             ) {
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(text = "Permission Required",
-                    style = typography.titleSmall)
+                    fontSize = 14.sp,
+                    fontFamily = DMSansFamily,
+                )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(text = permissionTextProvider.getDescription(isPermanentlyDeclined),
-                    style = typography.bodySmall,
+                    fontSize = 12.sp,
+                    fontFamily = DMSansFamily,
                     textAlign = TextAlign.Center ,
                     modifier = Modifier.padding(8.dp))
                 Spacer(modifier = Modifier.height(16.dp))
@@ -72,6 +77,7 @@ fun PermissionDialog(
                             "Ok"
                         },
                         fontWeight = FontWeight.Medium,
+                        fontFamily = DMSansFamily,
                         textAlign = TextAlign.Center,
                         modifier = Modifier
                             .fillMaxWidth()
@@ -113,6 +119,13 @@ class ReadPhonePermissionProvider : PermissionTextProvider {
             "This app needs access to your phone so that you can " +
                     "make payments offline."
         }
+    }
+
+}
+
+class AccessibilityPermissionProvider : PermissionTextProvider {
+    override fun getDescription(isPermanentlyDeclined: Boolean): String {
+        return "You must enable accessibility permissions for the PayUp app."
     }
 
 }

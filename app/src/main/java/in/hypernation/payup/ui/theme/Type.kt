@@ -21,14 +21,14 @@ val DMSansFamily = FontFamily(
 
 val Typography = Typography(
         bodyLarge = TextStyle(
-                fontFamily = FontFamily.Default,
+                fontFamily = DMSansFamily,
                 fontWeight = FontWeight.Normal,
                 fontSize = 16.sp,
                 lineHeight = 24.sp,
                 letterSpacing = 0.5.sp
         ),
         titleMedium = TextStyle(
-                fontFamily = FontFamily.Default,
+                fontFamily = DMSansFamily,
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 24.sp,
                 color = Color.Black
@@ -41,7 +41,7 @@ val Typography = Typography(
         ),
 
         headlineSmall = TextStyle(
-                fontFamily = FontFamily.Default,
+                fontFamily = DMSansFamily,
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 28.sp,
                 color = Color.Black

@@ -23,4 +23,11 @@ class ExampleUnitTest {
         println(bankBalance)
 
     }
+
+    @Test
+    fun testExtractUpiValues(){
+        val upiString = "559385upi://"  //upi://pay?pmo=9717444267&pn=ShiftingWale.Com&pa=9717444267@ybl&cu=INR&mc=0000
+        val (pmo, pa, pn) = StringManipulation().extractUPIValues(upiString)
+        println("PMO: $pmo, PA: $pa, PN: $pn")
+    }
 }

@@ -1,6 +1,7 @@
 package `in`.hypernation.payup.presentation.home
 
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -48,6 +49,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -68,6 +70,7 @@ import `in`.hypernation.payup.ui.theme.GhostBlack60
 import `in`.hypernation.payup.ui.theme.Peach
 import `in`.hypernation.payup.ui.theme.DMSansFamily
 import `in`.hypernation.payup.ui.theme.GhostBlack80
+import `in`.hypernation.payup.ui.theme.GhostWhite
 import `in`.hypernation.payup.utils.RUPEE_SYMBOL
 import org.koin.androidx.compose.koinViewModel
 import timber.log.Timber
@@ -75,25 +78,35 @@ import java.lang.reflect.Array
 
 
 @Composable
-fun HomeView(
+fun HomeScreen(
     viewModel : HomeViewModel = koinViewModel(),
-    openSettings : () -> Unit
+    openSettings : () -> Unit,
+    goToPayment : () -> Unit
 ){
     val linkState = viewModel.linkState.value
+    val context = LocalContext.current
+
+    if (viewModel.scanState.collectAsState().value.isUPIPayment){
+        goToPayment()
+    } else {
+        val msg = viewModel.scanState.collectAsState().value.message
+        if(msg.isNotEmpty()) Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+    }
+
     Scaffold (
-        contentColor = MaterialTheme.colorScheme.surface,
+        contentColor = GhostWhite,
         floatingActionButton = {
             ScanFAB (onClick = {
-                viewModel.handleEvent(HomeEvent.OnPayWithQR)
+                //viewModel.handleEvent(HomeEvent.OnPayWithQR)
+                goToPayment()
             })
         },
         floatingActionButtonPosition = FabPosition.Center
     ){
-        Surface(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(it),
-            color = MaterialTheme.colorScheme.surface
         ) {
             Column (
                 modifier = Modifier.fillMaxSize()
@@ -230,7 +243,7 @@ fun HomeView(
 
         }
     }
-    Timber.tag("TAG").d("HomeView: Accessibility ${viewModel.linkState}")
+
     if(linkState.message == "Accessibility Permission") {
         PermissionDialog(
             permissionTextProvider = AccessibilityPermissionProvider(),

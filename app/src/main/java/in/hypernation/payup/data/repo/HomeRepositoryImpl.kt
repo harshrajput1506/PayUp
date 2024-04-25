@@ -1,15 +1,18 @@
 package `in`.hypernation.payup.data.repo
 
 import android.content.Context
+import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.codescanner.GmsBarcodeScanner
+import com.google.mlkit.vision.codescanner.GmsBarcodeScannerOptions
+import com.google.mlkit.vision.codescanner.GmsBarcodeScanning
 import `in`.hypernation.payup.data.USSD.USSDApi
 import `in`.hypernation.payup.data.USSD.USSDBuilder
 import `in`.hypernation.payup.data.USSD.USSDResponse
 import `in`.hypernation.payup.data.manipulation.StringManipulation
 import `in`.hypernation.payup.data.models.Account
+import `in`.hypernation.payup.data.models.PayCredentials
 import `in`.hypernation.payup.utils.BYPASS_LANGUAGE
 import `in`.hypernation.payup.utils.OPTION_VIEW
-import `in`.hypernation.payup.utils.USSD_CODE
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -22,7 +25,7 @@ class HomeRepositoryImpl (
     private val stringManipulation: StringManipulation,
     private val scanner: GmsBarcodeScanner
 ) : HomeRepository {
-    override fun linkAccount(code: String, simSlot: Int, onResponse: (USSDResponse<Account>) -> Unit) {
+    override suspend fun linkAccount(code: String, simSlot: Int, onResponse: (USSDResponse<Account>) -> Unit) {
         ussdApi.callUSSDRequest(context, code, simSlot, object : USSDBuilder.CallBack{
             override fun response(message: String, isError : Boolean) {
                 // First time shows Welcome View
@@ -46,16 +49,16 @@ class HomeRepositoryImpl (
                 //String -> Balance
                 Timber.d(message)
                 if(isError){
-                    onResponse(USSDResponse.Error(message =  if(message == "Check your accessibility") "Accessibility Permission" else "Something Went Wrong"))
+                    return onResponse(USSDResponse.Error(message =  if(message == "Check your accessibility") "Accessibility Permission" else "Something Went Wrong"))
                 }
                 val bankBalance = stringManipulation.getBankBalance(message)
-                onResponse(USSDResponse.Success(Account(null, bankBalance = bankBalance, true)))
+                return onResponse(USSDResponse.Success(Account(null, bankBalance = bankBalance, true)))
             }
         })
 
     }
 
-    override fun checkBalance(code : String, simSlot: Int, onResponse: (USSDResponse<Account>) -> Unit) {
+    override suspend fun checkBalance(code : String, simSlot: Int, onResponse: (USSDResponse<Account>) -> Unit) {
         ussdApi.callUSSDRequest(context, code, simSlot, object : USSDBuilder.CallBack{
             override fun response(message: String, isError : Boolean) {
                 Timber.d(message)
@@ -79,24 +82,36 @@ class HomeRepositoryImpl (
 
         })
     }
-
-    override fun scanQr(): Flow<String> {
+    override fun scanQr(): Flow<PayCredentials?> {
         return callbackFlow {
             scanner.startScan()
                 .addOnSuccessListener {barcode ->
                     launch {
-                        barcode.rawValue?.let { send(it) }
+                        barcode.rawValue?.let { send(getCredentials(it)) }
                     }
                 }.addOnCanceledListener {
                     launch {
-                        send("Cancelled")
+                        send(null)
                     }
                 }.addOnFailureListener{
                     launch {
-                        send("Failed")
+                        send(null)
                     }
                 }
             awaitClose {  }
         }
+    }
+
+    private fun getCredentials(value : String) : PayCredentials? {
+        val (pmo, pa, pn) = stringManipulation.extractUPIValues(value)
+        pa?.let {
+            return PayCredentials(
+                upiId = pa,
+                name = pn ?: "",
+                number = pmo ?: ""
+            )
+        }
+
+        return null;
     }
 }

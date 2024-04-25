@@ -135,7 +135,9 @@ class HomeViewModel(
         viewModelScope.launch {
             repository.scanQr().collect{
                 _scanState.value = scanState.value.copy(
-                    details = it
+                    credentials = it,
+                    isUPIPayment = it!=null,
+                    message = if(it!=null) "Qr Code Scanned" else "Please scan right qr code"
                 )
                 Timber.d("Scan Details : $it")
             }

@@ -10,15 +10,20 @@ import android.os.Bundle
 import android.provider.Settings
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import `in`.hypernation.payup.data.USSD.USSDBuilder
 import `in`.hypernation.payup.di.appModule
-import `in`.hypernation.payup.presentation.home.HomeView
+import `in`.hypernation.payup.presentation.navigation.Navigation
 import `in`.hypernation.payup.presentation.permissions.PermissionView
+import `in`.hypernation.payup.ui.theme.GhostWhite
 import `in`.hypernation.payup.ui.theme.PayUpTheme
 import `in`.hypernation.payup.utils.BYPASS_LANGUAGE
 import `in`.hypernation.payup.utils.USSD_CODE
@@ -40,7 +45,6 @@ class MainActivity : ComponentActivity() {
         )
 
         setContent {
-            PayUpTheme {
                 val context : Context = LocalContext.current
                 // A surface container using the 'background' color from the theme
                 KoinApplication(application = {
@@ -50,17 +54,24 @@ class MainActivity : ComponentActivity() {
                     modules(appModule)
                 }) {
                     // Compose to preview with Koin
-                    HomeView(){
-                        openSettings(Settings.ACTION_ACCESSIBILITY_SETTINGS)
-                    }
-                    PermissionView(requestPermissions = requestPermission, isPermanentlyDeclined = {perm ->
-                         !shouldShowRequestPermissionRationale(perm)
-                    }) {
-                        openSettings(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+                    PayUpTheme {
+                        Surface (
+                            color = GhostWhite,
+                            modifier = Modifier.fillMaxSize()
+                        ) {
+                            Navigation {
+                                openSettings(Settings.ACTION_ACCESSIBILITY_SETTINGS)
+                            }
+                            PermissionView(requestPermissions = requestPermission, isPermanentlyDeclined = {perm ->
+                                !shouldShowRequestPermissionRationale(perm)
+                            }) {
+                                openSettings(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+                            }
+                        }
                     }
                 }
 
-            }
+
         }
     }
 }

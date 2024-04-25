@@ -66,4 +66,5 @@ dependencies {
     implementation(libs.timber)
     implementation(libs.koin.androidx.compose)
     implementation(libs.play.services.code.scanner)
+    implementation(libs.androidx.navigation.compose)
 }

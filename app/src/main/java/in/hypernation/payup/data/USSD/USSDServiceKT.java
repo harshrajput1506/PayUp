@@ -31,7 +31,7 @@ public class USSDServiceKT extends AccessibilityService {
             return;
         }
         String response = event.getText().toString();
-
+        Timber.d(response);
         if (isWelcomeView(event)) {
             // first view or logView, do nothing, pass / FIRST MESSAGE & move forward
             Timber.d("No inputText found & Welcome View");
@@ -55,8 +55,7 @@ public class USSDServiceKT extends AccessibilityService {
                 }
             } else {
                 // sent option 1
-                if (ussd.getSendType())
-                    ussd.getCallBackMessage().invoke(response);
+                if (ussd.getSendType()) ussd.getCallBackMessage().invoke(response);
                 else ussd.callBack.response(response, false);
             }
         }

@@ -48,4 +48,52 @@ class StringManipulation {
 
         return Triple(pmo, pa, pn)
     }
+
+    fun extractRefId(input: String): String? {
+        val regex = Regex("RefId: (\\d+)")
+        val matchResult = regex.find(input)
+        return matchResult?.groups?.get(1)?.value
+    }
+
+    fun checkPaymentSuccess(message: String) : Boolean {
+        val tags = listOf("payment", "successful", "RefId")
+        if(message.contains(tags[0]) && message.contains(tags[1]) && message.contains(tags[2])){
+            return true
+        }
+        return false
+    }
+
+    fun checkPaymentFailed(message: String) : Boolean {
+        val tags = listOf("payment", "failed", "RefId")
+        return message.contains(tags[0]) && message.contains(tags[1]) && message.contains(tags[2])
+    }
+
+    fun checkThankYouMsg(message: String) : Boolean{
+        val tag = "Thank you for using our services"
+        return message.contains(tag)
+    }
+
+    fun checkUpiIdBox(message: String) : Boolean{
+        val tag = "Enter UPI ID"
+        return message.contains(tag)
+    }
+
+    fun checkAmountBox(message: String) : Boolean{
+        val tag = "Enter Amount"
+        return message.contains(tag)
+    }
+
+    fun checkRemarkBox(message: String) : Boolean{
+        val tag = "Enter a remark"
+        return message.contains(tag)
+    }
+
+    fun extractMessage(input: String): String? {
+        val index = input.indexOf(" OK")
+        return if (index != -1) {
+            input.substringBefore(" OK")
+        } else {
+            null
+        }
+    }
 }

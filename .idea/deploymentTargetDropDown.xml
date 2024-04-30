@@ -5,24 +5,8 @@
       <entry key="HomeTest">
         <State />
       </entry>
-      <entry key="HomeView">
-        <State />
-      </entry>
       <entry key="app">
-        <State>
-          <runningDeviceTargetSelectedWithDropDown>
-            <Target>
-              <type value="RUNNING_DEVICE_TARGET" />
-              <deviceKey>
-                <Key>
-                  <type value="SERIAL_NUMBER" />
-                  <value value="adb-cd1b8fe2-aOveNu._adb-tls-connect._tcp" />
-                </Key>
-              </deviceKey>
-            </Target>
-          </runningDeviceTargetSelectedWithDropDown>
-          <timeTargetWasSelectedWithDropDown value="2024-04-25T18:29:01.304636Z" />
-        </State>
+        <State />
       </entry>
     </value>
   </component>

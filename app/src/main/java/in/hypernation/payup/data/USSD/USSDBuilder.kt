@@ -69,7 +69,7 @@ object USSDBuilder : USSDApi, USSDInterface {
         sendType = false
         this.context = context
         this.callBack = callBack
-        Timber.d(verifyAccessibilityAccess(context).toString())
+        Timber.d("Accessibility Permission ${verifyAccessibilityAccess(context).toString()}")
         if (verifyAccessibilityAccess(context)) {
             dialUp(code, simSlot)
             Timber.d("Dial UP")

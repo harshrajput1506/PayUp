@@ -46,16 +46,19 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import `in`.hypernation.payup.data.models.PayCredentials
 import `in`.hypernation.payup.ui.theme.DMSansFamily
 import `in`.hypernation.payup.ui.theme.GhostBlack
 import `in`.hypernation.payup.ui.theme.GhostBlack20
 import `in`.hypernation.payup.ui.theme.GhostBlack60
 import `in`.hypernation.payup.ui.theme.GhostBlack80
 import `in`.hypernation.payup.utils.RUPEE_SYMBOL
+import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PaymentScreen(
+    viewModel: PaymentViewModel = koinViewModel(),
     backToHome :  () -> Unit
 ){
     var amount by remember {
@@ -65,6 +68,7 @@ fun PaymentScreen(
         mutableStateOf(TextFieldValue(""))
     }
     val context = LocalContext.current
+    val credentials : PayCredentials = viewModel.credentials //viewModel.credentials
     Box (
         modifier = Modifier.fillMaxSize()
     ) {
@@ -86,13 +90,21 @@ fun PaymentScreen(
                     fontFamily = DMSansFamily,
                     color = GhostBlack
                 )
-                Spacer(modifier = Modifier.height(2.dp))
+                Spacer(modifier = Modifier.height(10.dp))
                 Text(
-                    text = "Harsh Rajput",
+                    text = credentials.name,
                     fontSize = 18.sp,
                     fontFamily = DMSansFamily,
                     fontWeight = FontWeight.Medium,
                     color = GhostBlack
+                )
+                Spacer(modifier = Modifier.height(1.dp))
+                Text(
+                    text = credentials.upiId,
+                    fontSize = 14.sp,
+                    fontFamily = DMSansFamily,
+                    fontWeight = FontWeight.Normal,
+                    color = GhostBlack80
                 )
 
                 Spacer(modifier = Modifier.height(50.dp))
@@ -206,10 +218,17 @@ fun PaymentScreen(
         }
 
         Button(
-            modifier = Modifier.align(Alignment.BottomCenter)
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
                 .padding(30.dp)
                 .fillMaxWidth(),
-            onClick = { /*TODO*/ },
+            onClick = {
+                      if(amount.text.isNotEmpty()){
+                          viewModel.onPay(amount.text, remarks.text)
+                      } else {
+                          Toast.makeText(context, "Enter amount first", Toast.LENGTH_SHORT).show()
+                      }
+            },
             contentPadding = PaddingValues(vertical = 16.dp)
         ) {
             Text(
@@ -257,11 +276,4 @@ private fun PaymentAppBar(onBack : () -> Unit){
             modifier = Modifier.fillMaxWidth()
         )
     }
-}
-
-
-@Composable
-@Preview(showSystemUi = true)
-fun PreviewPaymentScreen(){
-    PaymentScreen { }
 }

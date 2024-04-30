@@ -11,6 +11,8 @@ import `in`.hypernation.payup.data.local.PreferenceManager
 import `in`.hypernation.payup.data.manipulation.StringManipulation
 import `in`.hypernation.payup.data.repo.HomeRepository
 import `in`.hypernation.payup.data.repo.HomeRepositoryImpl
+import `in`.hypernation.payup.data.repo.PaymentRepository
+import `in`.hypernation.payup.data.repo.PaymentRepositoryImpl
 import `in`.hypernation.payup.presentation.home.HomeViewModel
 import `in`.hypernation.payup.presentation.payment.PaymentViewModel
 import `in`.hypernation.payup.presentation.permissions.PermissionViewModel
@@ -21,9 +23,10 @@ import org.koin.dsl.module
 val appModule = module {
     viewModel { HomeViewModel(get(), get()) }
     viewModel { PermissionViewModel() }
-    viewModel { PaymentViewModel() }
+    viewModel { PaymentViewModel(get(), get()) }
     single<USSDApi> {USSDBuilder}
     single<HomeRepository> {HomeRepositoryImpl(get(), get(), get(), get())}
+    single<PaymentRepository> { PaymentRepositoryImpl(get(), get(), get()) }
     single {StringManipulation()}
     single { PreferenceManager(get()) }
 

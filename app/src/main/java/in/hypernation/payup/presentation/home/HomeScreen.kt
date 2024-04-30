@@ -61,6 +61,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import `in`.hypernation.payup.R
 import `in`.hypernation.payup.data.models.Account
+import `in`.hypernation.payup.data.models.PayCredentials
 import `in`.hypernation.payup.presentation.permissions.AccessibilityPermissionProvider
 import `in`.hypernation.payup.presentation.permissions.PermissionDialog
 
@@ -81,13 +82,13 @@ import java.lang.reflect.Array
 fun HomeScreen(
     viewModel : HomeViewModel = koinViewModel(),
     openSettings : () -> Unit,
-    goToPayment : () -> Unit
+    goToPayment : (credentials: PayCredentials) -> Unit
 ){
     val linkState = viewModel.linkState.value
     val context = LocalContext.current
 
     if (viewModel.scanState.collectAsState().value.isUPIPayment){
-        goToPayment()
+        goToPayment(viewModel.scanState.collectAsState().value.credentials!!)
     } else {
         val msg = viewModel.scanState.collectAsState().value.message
         if(msg.isNotEmpty()) Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
@@ -97,8 +98,7 @@ fun HomeScreen(
         contentColor = GhostWhite,
         floatingActionButton = {
             ScanFAB (onClick = {
-                //viewModel.handleEvent(HomeEvent.OnPayWithQR)
-                goToPayment()
+                viewModel.handleEvent(HomeEvent.OnPayWithQR)
             })
         },
         floatingActionButtonPosition = FabPosition.Center

@@ -30,4 +30,17 @@ class ExampleUnitTest {
         val (pmo, pa, pn) = StringManipulation().extractUPIValues(upiString)
         println("PMO: $pmo, PA: $pa, PN: $pn")
     }
+    @Test
+    fun testExtractRefId(){
+        val input = "[Your payment to Satyam Kumar Jha failed (RefId: 412111884547) ., OK]"
+        val refId = StringManipulation().extractRefId(input)
+        println("Extracted RefId: $refId")
+    }
+
+    @Test
+    fun testExtractMessage(){
+        val input = "Your UPI PIN length is incorrect, OK"
+        val message = StringManipulation().extractMessage(input)
+        println("Extracted message: $message")
+    }
 }

@@ -81,7 +81,7 @@ class HomeViewModel(
 
                     is USSDResponse.Error -> {
                         _linkState.value =
-                            LinkState(message = "Not Linked! Something Wrong", isLoading = false)
+                            LinkState(message = response.message, isLoading = false)
                     }
 
                     else -> {

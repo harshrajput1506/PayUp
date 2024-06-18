@@ -1,6 +1,5 @@
 package `in`.hypernation.payup.presentation.home
 
-import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -33,10 +32,12 @@ import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.lightColorScheme
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -78,6 +79,7 @@ import timber.log.Timber
 import java.lang.reflect.Array
 
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     viewModel : HomeViewModel = koinViewModel(),
@@ -86,6 +88,10 @@ fun HomeScreen(
 ){
     val linkState = viewModel.linkState.value
     val context = LocalContext.current
+    var showSheet by remember {
+        mutableStateOf(false)
+    }
+    val sheetState = rememberModalBottomSheetState()
 
     if (viewModel.scanState.collectAsState().value.isUPIPayment){
         goToPayment(viewModel.scanState.collectAsState().value.credentials!!)
@@ -236,8 +242,32 @@ fun HomeScreen(
 
                 }
 
-                MenuGridView(menus = viewModel.menuItems) {
+                MenuGridView(
+                    menus = viewModel.menuItems,
+                ) { index ->
+                    when (index) {
+                        0 -> {
+                            // Scan Any Qr Code
+                        }
 
+                        1 -> {
+                            // Pay With Upi ID
+                            showSheet = true                        }
+
+                        2 -> {
+                            // Bank Transfer
+                            Toast.makeText(context, "Coming Soon", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                }
+
+                if (showSheet){
+                    ModalBottomSheet(
+                        onDismissRequest = { showSheet = false },
+                        sheetState = sheetState
+                    ) {
+                        UPIBottomSheet()
+                    }
                 }
             }
 
@@ -298,7 +328,7 @@ fun BalanceCard(linkState: LinkState, onCheckBalance : () -> Unit){
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MenuGridView(menus : List<Pair<String, Int>>, onClick: () -> Unit){
+fun MenuGridView(menus : List<Pair<String, Int>>, onClick: (Int) -> Unit){
     LazyVerticalGrid(
         columns = GridCells.Fixed(3),
         modifier = Modifier.padding(
@@ -308,7 +338,7 @@ fun MenuGridView(menus : List<Pair<String, Int>>, onClick: () -> Unit){
     ) {
         items(menus.size){index ->
             Card(
-                onClick = { onClick },
+                onClick = {onClick(index)},
                 colors = CardDefaults.cardColors(
                     containerColor = Color.Transparent
                 )
@@ -398,6 +428,12 @@ fun AvatarCard(){
 
 
     }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun UPIBottomSheet() {
+
 }
 
 @Composable

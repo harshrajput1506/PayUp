@@ -134,9 +134,9 @@ object USSDBuilder : USSDApi, USSDInterface {
             installedAccessibilityServiceList.forEach { service ->
                 Timber.d(service.id)
                 Timber.d(service.id.contains(context.packageName).toString())
+                val accessibilityEnabled = Settings.Secure.getInt(context.applicationContext.contentResolver, Settings.Secure.ACCESSIBILITY_ENABLED)
                 if (service.id.contains(context.packageName) &&
-                    Settings.Secure.getInt(context.applicationContext.contentResolver,
-                        Settings.Secure.ACCESSIBILITY_ENABLED) == 1) {
+                    accessibilityEnabled == 1) {
                     Timber.d(Settings.Secure.getString(context.applicationContext.contentResolver,
                         Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES))
                     Settings.Secure.getString(context.applicationContext.contentResolver,

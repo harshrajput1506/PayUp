@@ -47,6 +47,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import `in`.hypernation.payup.data.models.PayCredentials
+import `in`.hypernation.payup.presentation.permissions.AccessibilityPermissionProvider
+import `in`.hypernation.payup.presentation.permissions.PermissionDialog
 import `in`.hypernation.payup.ui.theme.DMSansFamily
 import `in`.hypernation.payup.ui.theme.GhostBlack
 import `in`.hypernation.payup.ui.theme.GhostBlack20
@@ -59,7 +61,9 @@ import org.koin.androidx.compose.koinViewModel
 @Composable
 fun PaymentScreen(
     viewModel: PaymentViewModel = koinViewModel(),
-    backToHome :  () -> Unit
+    backToHome :  () -> Unit,
+    openSettings : () -> Unit,
+    goToResult : (status : String) -> Unit
 ){
     var amount by remember {
         mutableStateOf(TextFieldValue(""))
@@ -67,8 +71,13 @@ fun PaymentScreen(
     var remarks by remember {
         mutableStateOf(TextFieldValue(""))
     }
+    val paymentState = viewModel.state.value
     val context = LocalContext.current
     val credentials : PayCredentials = viewModel.credentials //viewModel.credentials
+
+    if(paymentState.isSuccess){
+        goToResult(paymentState.status)
+    }
     Box (
         modifier = Modifier.fillMaxSize()
     ) {
@@ -239,6 +248,17 @@ fun PaymentScreen(
             )
         }
 
+    }
+    if(paymentState.message == "Accessibility Permission") {
+        PermissionDialog(
+            permissionTextProvider = AccessibilityPermissionProvider(),
+            isPermanentlyDeclined = true,
+            onDismiss = { viewModel.dismissDialog() },
+            onOkClick = { /*TODO*/ },
+            onGoToAppSettingsClick = {
+                viewModel.dismissDialog()
+                openSettings()
+            })
     }
 
     BackHandler {

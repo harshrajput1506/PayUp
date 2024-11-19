@@ -1,5 +1,7 @@
 package `in`.hypernation.payup.presentation.payment
 
 data class PaymentState(
-   val isError: Boolean = false
+   val isSuccess: Boolean = false,
+   val status : String = "",
+   val message : String? = null,
 )

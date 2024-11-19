@@ -11,6 +11,7 @@ import androidx.navigation.compose.rememberNavController
 import `in`.hypernation.payup.presentation.home.HomeScreen
 import `in`.hypernation.payup.presentation.payment.PaymentScreen
 import `in`.hypernation.payup.presentation.payment.PaymentViewModel
+import `in`.hypernation.payup.presentation.result.ResultScreen
 import kotlinx.coroutines.flow.collect
 import timber.log.Timber
 import kotlin.math.log
@@ -43,7 +44,17 @@ fun Navigation(
                         }
                     }
                 },
+                openSettings = {
+                    openSettings()
+                },
+                goToResult = {
+                    controller.navigate(Screen.Result.createRoute(it))
+                }
             )
+        }
+
+        composable(route = Screen.Result.route) {
+            ResultScreen()
         }
 
     }

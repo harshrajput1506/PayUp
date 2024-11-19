@@ -16,6 +16,7 @@ import `in`.hypernation.payup.data.repo.PaymentRepositoryImpl
 import `in`.hypernation.payup.presentation.home.HomeViewModel
 import `in`.hypernation.payup.presentation.payment.PaymentViewModel
 import `in`.hypernation.payup.presentation.permissions.PermissionViewModel
+import `in`.hypernation.payup.presentation.result.ResultViewModel
 import org.koin.android.ext.koin.androidContext
 import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.dsl.module
@@ -23,6 +24,7 @@ import org.koin.dsl.module
 val appModule = module {
     viewModel { HomeViewModel(get(), get()) }
     viewModel { PermissionViewModel() }
+    viewModel { ResultViewModel(get()) }
     viewModel { PaymentViewModel(get(), get()) }
     single<USSDApi> {USSDBuilder}
     single<HomeRepository> {HomeRepositoryImpl(get(), get(), get(), get())}

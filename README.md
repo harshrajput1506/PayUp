@@ -1,1 +1,1 @@
-PayUp - Offline UPI Payment (Currently In Development)
+PayUp - Offline UPI Payment (Beta Version)

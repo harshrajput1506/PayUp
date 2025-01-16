@@ -57,6 +57,14 @@ fun ResultScreen(
                 fontWeight = FontWeight.Normal,
                 color = GhostBlack
             )
+
+            Text(
+                "Reference Id",
+                 fontSize = 14.sp,
+                fontFamily = DMSansFamily,
+                color = GhostBlack80,
+                fontWeight = FontWeight.Normal
+            )
         }
     }
 }

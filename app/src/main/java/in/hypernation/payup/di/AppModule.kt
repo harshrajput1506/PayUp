@@ -1,4 +1,4 @@
-package `in`.hypernation.payup.di
+    package `in`.hypernation.payup.di
 
 import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.codescanner.GmsBarcodeScanner

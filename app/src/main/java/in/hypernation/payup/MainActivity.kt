@@ -49,7 +49,6 @@ class MainActivity : ComponentActivity() {
                 // A surface container using the 'background' color from the theme
                 KoinApplication(application = {
                     // your preview config here
-
                     androidContext(this@MainActivity)
                     modules(appModule)
                 }) {

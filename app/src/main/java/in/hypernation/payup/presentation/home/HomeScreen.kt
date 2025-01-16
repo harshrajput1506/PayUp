@@ -448,4 +448,9 @@ fun PreviewBalanceCard(){
             bankName = "Kotak"
         )
     )) {}
+    Text(
+        "As an  developer all we want is ",
+        fontFamily = DMSansFamily,
+        fontWeight = FontWeight.Normal
+    )
 }
